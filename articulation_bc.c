@@ -77,81 +77,83 @@ void apUtil(struct graph * g, int vert, int bredge[vert][vert], int charge_edge[
 	    if(!isVisited[temp->val])
         {
 
-
-
-			//charge_edge[temp->val][node] += 1;
+		  charge_edge[node][temp->val] += 1; // charging for one if	
           children++;
 		  parent[temp->val]=node;
-		  charge_edge[node][temp->val] += 1;
+		  charge_edge[node][temp->val] += 1; //charging edge for parent assigning
           apUtil(g,vert,bredge,charge_edge,temp->val,isVisited,des,parent,low,ap,charge_vert);
 
           low[node]= min(low[node],low[temp->val]);
-          charge_edge[node][temp->val] += 1;
+          charge_edge[node][temp->val] += 1; //charging for assigning low
+		  //charging edge for low value assigning
             if (des[node]<low[temp->val]){
              if (node < temp->val){
 			bredge[node][temp->val] = 1 ;
-			charge_edge[node][temp->val] += 1;
             }
             else {
               bredge[temp->val][node] = 1;
-              charge_edge[node][temp->val] += 1;
             }
+			charge_edge[node][temp->val] += 2; // charging edge for bridge assigning and first if statement
 			}
-			charge_edge[node][temp->val] += 1;
+				//////////////////////////////////////
 		  if(parent[node]==-1 && children>1){
              ap[node]=1;
-             charge_vert[node]+=5;
+			 charge_edge[node][temp->val] += 2;// charging edge for AP assigning and if
 			 }
 
           else if(parent[node]!=-1 && des[node]<=low[temp->val]){
             ap[node]=1;
-            charge_vert[node]+=1;
+			charge_edge[node][temp->val] += 3; // charging edge for AP assigning and 2 ifs
 			}
-			charge_edge[node][temp->val] += 2;
+			else{
+			charge_edge[node][temp->val] += 2; //// charging edge for 2 ifs
+			}
 
         }
         else if(isVisited[temp->val] && temp->val!=parent[node])
         {
-            //printf("\n vert %d has been visited", node+1);
+			
             //printf("\n BACKEDGE %d %d ", node+1, temp->val +1);
             low[node]=min(low[node],des[temp->val]);
-            charge_edge[node][temp->val] += 1;
+            charge_edge[node][temp->val] += 3; // charging edge for LOW assigning and 2 ifs
         }
-        charge_edge[node][temp->val] += 1;
-        //printf("vert %d has been visited!!\n",temp->val +1 );
+		else {	
+        charge_edge[node][temp->val] += 2; //charging edge for 2 ifs
+		}
+
        temp= temp->next;
       }
 }
 
-void bcUtil(struct graph * g, int vert, int bc[vert][vert],int node,int* isVisited,int* des,int* parent,int* low)
+void bcUtil(struct graph * g, int vert, int bc[vert][vert],int charge_edge[vert][vert],int node,int* isVisited,int* des,int* parent,int* low, int* charge_vert)
 {
     struct node* temp=NULL;
     static int time=0;
     int children=0;
-    int backEdge = 0;
     int last_a=999;
     temp = g->arr[node];
     isVisited[node]=1;
     time++;
     des[node]=low[node]=time;
+	charge_vert[node]+=5;
     //printf("VERTEX %d", node +1);
     while(temp!=NULL)
     {
 	    if(!isVisited[temp->val])
         {
+			charge_edge[node][temp->val] += 1; // charging for one if	
           children++;
-		  //printf("\nedddddd: %d %d",node+1, (temp->val) + 1);
-		  //printf("\n**add %d",(temp->val)+1);
-		  push((temp->val) + 1);
+		  push((temp->val) + 1); //// charging edge for pushing
+		  charge_edge[node][temp->val]+=1;
 		  parent[temp->val]=node;
-          bcUtil(g,vert,bc,temp->val,isVisited,des,parent,low);
+		  charge_edge[node][temp->val]+=1;  // charging edge for assigning parent
+		  printf("\n CHARGING %d %d", node+1, temp->val +1);
+		  
+          bcUtil(g,vert,bc,charge_edge,temp->val,isVisited,des,parent,low,charge_vert);
 
           low[node]= min(low[node],low[temp->val]);
-
+          charge_edge[node][temp->val]+=1; // charging edge for assigning low
 		  if(parent[node]==-1 && children>1){
-
-		      //printf("\n**add %d",temp->val + 1);
-              //printf("\n** NEW COMPONENT, start vert %d", node + 1);
               bc[node][node] += 1;
               //printf("\n %d has been encountered", node+1);
               while(last_a!=(temp->val) + 1){
@@ -163,10 +165,11 @@ void bcUtil(struct graph * g, int vert, int bc[vert][vert],int node,int* isVisit
                     top = tempo->next;
                     free(tempo);
                     }
+			  charge_edge[node][temp->val]+=2; // charging edge for if, pop
 
 			 //pop((temp->val) + 1);
 			 }
-          if(parent[node]!=-1 && des[node]<=low[temp->val]){
+          else if(parent[node]!=-1 && des[node]<=low[temp->val]){
              //printf("\n**add %d",temp->val + 1);
             printf("\n** NEW COMPONENT, start vert %d", node + 1);
 		    bc[node][node] += 1;
@@ -180,17 +183,24 @@ void bcUtil(struct graph * g, int vert, int bc[vert][vert],int node,int* isVisit
                     top = tempo->next;
                     free(tempo);
                     }
+			charge_edge[node][temp->val]+=3; // charging edge for 2 ifs, pop
 
+			}
+			else{
+			charge_edge[node][temp->val]+=2; // charging edge for 2 ifs
 			}
         }
         else if( temp->val!=parent[node] && des[temp->val]<low[node])
         {
             //printf("\n backedge found");
             low[node]=des[temp->val];
+			charge_edge[node][temp->val]+=3; // charging edge for 2 ifs and assigning low
             //printf("\n**add %d",node +1);
 			//push((temp->val) + 1, node+1);
         }
-
+		else{
+		charge_edge[node][temp->val]+=2; // charging edge for 2 ifs
+			}
        temp= temp->next;
       }
 
@@ -207,12 +217,14 @@ void AP(struct graph* g)
     int x,y;
     int bredge[(g->v)][(g->v)];
 	int charge_edge[(g->v)][(g->v)];
+	int bc[g->v][g->v];
 	for (x=0;x<(g->v);x++)
 	{
 		for (y=0;y<(g->v);y++)
 		{
 			bredge[x][y]=0;
 			charge_edge[x][y]=0;
+			bc[x][y] = 0;
 		}
 	}
 
@@ -244,13 +256,7 @@ void AP(struct graph* g)
 			fprintf(a, "%d ", i+1);
 		}
     }
-    for(i=0;i<g->v;i++)
-    {
-
-        	printf("\n vert %d has been charged %d times",i+1,charge_vert[i] );
-
-
-    }
+  
 	fclose(a);
     for (x=0;x<(g->v);x++)
 	{
@@ -262,44 +268,23 @@ void AP(struct graph* g)
 		}
 	}
 	fclose(b);
-	for (x=0;x<(g->v);x++)
-	{
-		for (y=0;y<(g->v);y++)
-		{
-			if(charge_edge[x][y]!=0)
-			{ printf("edge %d %d has been charged %d times\n",x+1,y+1, charge_edge[x][y]);
-			}
-		}
-	}
-}
-void BCP(struct graph* g)
-{
-    int i;
-    int* des = (int*)malloc(sizeof(int)*g->v);
-    int* isVisited = (int*)malloc(sizeof(int)*g->v);
-    int* parent = (int*)malloc(sizeof(int)*g->v);
-    int* low = (int*)malloc(sizeof(int)*g->v);
-    int x,y;
-    int bc[(g->v)][(g->v)];
-	for (x=0;x<(g->v);x++)
-	{
-		for (y=0;y<(g->v);y++)
-		{
-			bc[x][y]=0;
-		}
-	}
-
-    for(i=0;i<g->v;i++)
+	
+	des = (int*)malloc(sizeof(int)*g->v);
+    isVisited = (int*)malloc(sizeof(int)*g->v);
+    parent = (int*)malloc(sizeof(int)*g->v);
+    low = (int*)malloc(sizeof(int)*g->v);
+	for(i=0;i<g->v;i++)
     {
         isVisited[i]=0;
         //parent[i]=-1;
+        
     }
-    for(i=0;i<g->v;i++)
+	for(i=0;i<g->v;i++)
     {
         if(isVisited[i]==0)
         {
             push(i+1);
-            bcUtil(g,g->v,bc,i,isVisited,des,parent,low);
+            bcUtil(g,g->v,bc,charge_edge,i,isVisited,des,parent,low, charge_vert);
 			//pop(-1);
         }
     }
@@ -327,21 +312,96 @@ void BCP(struct graph* g)
 		}
 	}
 	fclose(c);
+	for(i=0;i<g->v;i++)
+    {
+
+        	printf("\n vert %d has been charged %d times",i+1,charge_vert[i] );
+
+
+    }
+	for (x=0;x<(g->v);x++)
+	{
+		for (y=0;y<(g->v);y++)
+		{
+			if(charge_edge[x][y]!=0){
+			printf("edge %d %d has been charged %d times\n",x+1,y+1, charge_edge[x][y]);}
+		}
+	}
+}
+void BCP(struct graph* g)
+{
+    int i;
+    int* des = (int*)malloc(sizeof(int)*g->v);
+    int* isVisited = (int*)malloc(sizeof(int)*g->v);
+    int* parent = (int*)malloc(sizeof(int)*g->v);
+    int* low = (int*)malloc(sizeof(int)*g->v);
+    int* charge_vert = (int*)malloc(sizeof(int)*g->v);
+    int x,y;
+    int bredge[(g->v)][(g->v)];
+	int charge_edge[(g->v)][(g->v)];
+	int bc[g->v][g->v];
+	for (x=0;x<(g->v);x++)
+	{
+		for (y=0;y<(g->v);y++)
+		{
+			bc[x][y]=0;
+			charge_edge[x][y]=0;
+		}
+	}
+
+    for(i=0;i<g->v;i++)
+    {
+        isVisited[i]=0;
+        charge_vert[i] = 0;
+    }
+    for(i=0;i<g->v;i++)
+    {
+        if(isVisited[i]==0)
+        {
+            push(i+1);
+            bcUtil(g,g->v,bc,charge_edge,i,isVisited,des,parent,low, charge_vert);
+			//pop(-1);
+        }
+    }
+    printf("\n");
+	FILE *c;
+	c = fopen("Ac_new.txt", "w");
+    for (x=0;x<(g->v);x++)
+	{   int index = bc[x][x];
+        //printf("\n index %d", bc[x][x]);
+        while(index>0){
+         //printf("\n");
+         //printf("\n %d",x+1);
+		for (y=0;y<(g->v);y++)
+		{
+
+			if(bc[x][y]==index)
+
+			{
+			    fprintf(c, "%d ",y+1);
+			}
+        }
+		fprintf(c,"\n");
+        bc[x][x]--;
+        index--;
+		}
+	}
+	fclose(c);
 }
 
 int main(int argc, char *argv[])
 {
 
 	FILE *fp;
-	/*
+	
 	if (argc < 2)
 	{
 		printf("too few arguments !");
 		return 0;
-	}*/
+	}
 
 	// read input from file
-	fp = fopen("C:/Users/admin/Downloads/programming project_documents/project_documents/input_files/in2.txt", "r");
+	fp = fopen(argv[1], "r");
 
 	int num_v = 0;
 	char l[256];
@@ -371,6 +431,6 @@ int main(int argc, char *argv[])
 	fclose(fp);
 
     AP(g);
-	BCP(g);
+
 
 }
