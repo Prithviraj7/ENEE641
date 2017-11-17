@@ -85,7 +85,8 @@ void apUtil(struct graph * g, int vert, int bredge[vert][vert], int charge_edge[
 
           low[node]= min(low[node],low[temp->val]);
           charge_edge[node][temp->val] += 1; //charging for assigning low
-		  //charging edge for low value assigning
+
+			/////////// STORING BRIDGES SO THAT IT CAN BE PRINTED IN A SORTED WAY //////
             if (des[node]<low[temp->val]){
              if (node < temp->val){
 			bredge[node][temp->val] = 1 ;
@@ -95,25 +96,29 @@ void apUtil(struct graph * g, int vert, int bredge[vert][vert], int charge_edge[
             }
 			charge_edge[node][temp->val] += 2; // charging edge for bridge assigning and first if statement
 			}
-				//////////////////////////////////////
+			////////////// bridge stored//////////////////////////////////////////////////
+
+
+			//////// STORING AP SO THAT IT CAN BE PRINTED IN A SORTED WAY ///////////
 		  if(parent[node]==-1 && children>1){
              ap[node]=1;
 			 charge_edge[node][temp->val] += 2;// charging edge for AP assigning and if
 			 }
+			
 
           else if(parent[node]!=-1 && des[node]<=low[temp->val]){
             ap[node]=1;
 			charge_edge[node][temp->val] += 3; // charging edge for AP assigning and 2 ifs
 			}
+			//////////////// AP STORED ////////////////////////////////////////////
 			else{
 			charge_edge[node][temp->val] += 2; //// charging edge for 2 ifs
 			}
-
+			
         }
         else if(isVisited[temp->val] && temp->val!=parent[node])
         {
 			
-            //printf("\n BACKEDGE %d %d ", node+1, temp->val +1);
             low[node]=min(low[node],des[temp->val]);
             charge_edge[node][temp->val] += 3; // charging edge for LOW assigning and 2 ifs
         }
@@ -155,7 +160,6 @@ void bcUtil(struct graph * g, int vert, int bc[vert][vert],int charge_edge[vert]
           charge_edge[node][temp->val]+=1; // charging edge for assigning low
 		  if(parent[node]==-1 && children>1){
               bc[node][node] += 1;
-              //printf("\n %d has been encountered", node+1);
               while(last_a!=(temp->val) + 1){
                     struct stackNode *tempo = top;
                     last_a = top->u;
@@ -167,10 +171,8 @@ void bcUtil(struct graph * g, int vert, int bc[vert][vert],int charge_edge[vert]
                     }
 			  charge_edge[node][temp->val]+=2; // charging edge for if, pop
 
-			 //pop((temp->val) + 1);
 			 }
           else if(parent[node]!=-1 && des[node]<=low[temp->val]){
-             //printf("\n**add %d",temp->val + 1);
             printf("\n** NEW COMPONENT, start vert %d", node + 1);
 		    bc[node][node] += 1;
               printf("\n %d has been encountered", node+1);
@@ -192,11 +194,9 @@ void bcUtil(struct graph * g, int vert, int bc[vert][vert],int charge_edge[vert]
         }
         else if( temp->val!=parent[node] && des[temp->val]<low[node])
         {
-            //printf("\n backedge found");
             low[node]=des[temp->val];
 			charge_edge[node][temp->val]+=3; // charging edge for 2 ifs and assigning low
-            //printf("\n**add %d",node +1);
-			//push((temp->val) + 1, node+1);
+           
         }
 		else{
 		charge_edge[node][temp->val]+=2; // charging edge for 2 ifs
@@ -312,21 +312,37 @@ void AP(struct graph* g)
 		}
 	}
 	fclose(c);
+	FILE *op;
+	op = fopen("B.txt", "w");
+	int v_op_count = 0;
+	int e_op_count = 0;
 	for(i=0;i<g->v;i++)
     {
-
-        	printf("\n vert %d has been charged %d times",i+1,charge_vert[i] );
-
-
+        	fprintf(op, "vertex %d has been charged %d times\n",i+1,charge_vert[i]);
+			v_op_count+=charge_vert[i];
     }
 	for (x=0;x<(g->v);x++)
 	{
 		for (y=0;y<(g->v);y++)
 		{
+			if (x<y){
+			charge_edge[x][y]+=charge_edge[y][x];
+			
 			if(charge_edge[x][y]!=0){
-			printf("edge %d %d has been charged %d times\n",x+1,y+1, charge_edge[x][y]);}
+			fprintf(op,"edge %d %d has been charged %d times\n",x+1,y+1, charge_edge[x][y]);
+			e_op_count+=charge_edge[x][y];
+			}
+			}
+			
 		}
 	}
+	fclose(op);
+	FILE *total;
+	total = fopen("C.txt", "w");
+	fprintf(total,"Total number of operations charged to all vertices is: %d",v_op_count);
+	fprintf(total,"\nTotal number of operations charged to all edges is: %d",e_op_count);
+	fprintf(total,"\nTotal number of operations is: %d",v_op_count + e_op_count);
+	fclose(total);
 }
 void BCP(struct graph* g)
 {
