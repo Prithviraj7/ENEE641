@@ -26,7 +26,6 @@ void push(int value)
    else
       newNode->next = top;
    top = newNode;
-   printf("\n inserted %d", top->u);
 }
 
 struct node
@@ -58,7 +57,6 @@ void addEdge(struct graph* g,int u,int v)
 	if (u == v){
 		return;
 	}
-	printf(" adding edge between %d and %d  \n", u+1, v+1);
     struct node* temp =(struct node*)malloc(sizeof(struct node));
     temp->val = v;
     temp->next = g->arr[u];
@@ -76,11 +74,9 @@ void apUtil(struct graph * g, int vert, int bredge[vert][vert], int charge_edge[
     isVisited[node]=1;
     time++;
     des[node]=low[node]=time; // des : discovery time, low : low time
-    printf("VERTEX %d", node +1);
     charge_vert[node]+=5;// chargina vertex for initializing adjacency list, children discovery time low time
     while(temp!=NULL) 
     {
-        printf("\n EDGE %d %d ", node+1, temp->val +1);
 	    if(!isVisited[temp->val])
         {
 
@@ -262,14 +258,13 @@ void AP(struct graph* g)
 	FILE *a, *b;
 	a = fopen("Aa.txt", "w");
 	b = fopen("Ab.txt", "w");
-    printf("\n");
+
     // traversing ap array in a sequential manner to print APs in a sorted way
     for(i=0;i<g->v;i++)
     {
 
 		if (ap[i]!=0)
 		{
-        	printf(" %d ",i+1 );
 			fprintf(a, "%d ", i+1);
 		}
     }
